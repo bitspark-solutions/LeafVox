@@ -4,6 +4,12 @@
 
 **Goal:** A 100% free, 100% offline desktop app that opens any PDF, reads it aloud sentence-by-sentence with natural local neural voices, and highlights the text being spoken — with a fast, smooth UI, built so the same codebase later ships to macOS, Linux, Android, and iOS.
 
+## Repo hard rules (owner-set; apply to every future commit)
+1. **One class per file** — every class/record/struct/enum/interface in its own file (entities, DTOs, enums included); no nested or colocated types.
+2. **No competitor brand names** anywhere in the repo (code, docs, UI, commits) — describe the category generically.
+3. **$0 forever** — MIT/Apache/BSD deps only; free-licensed voices with per-voice license records.
+4. **No hosted CI** — verification is `scripts/verify-all.sh`, must pass before push.
+
 **Name:** **LeafVox** (leaf = page, vox = voice). Verified free on 2026-10-23: 0 GitHub repos with that name, GitHub user/org `leafvox` is 404 (unclaimed), npm `leafvox` 404, PyPI `leafvox` 404. Alternatives that were taken: VoxReader, SpeakPDF, Readalot. Runner-up free names: PageMouth, AudLeaf.
 
 **Architecture:** Clean-layered .NET solution: `LeafVox.Core` (pure PDF → reading-spine model: pages → blocks → sentences with bounding boxes), `LeafVox.Tts` (engine abstraction over sherpa-onnx with a sentence-prefetch synthesis pipeline and an `IAudioSink` playback seam), and `LeafVox.App` (Avalonia 12 MVVM UI: reader view, karaoke highlight, transport controls, voice manager). All platform-specific code hides behind the two seams `ITtsEngine` and `IAudioSink`, which is what makes the Mac/Linux/Android/iOS port cheap later.
