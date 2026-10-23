@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LeafVox.Core/LeafVox.Core.csproj" />
+    <Project Path="src/LeafVox.Tts/LeafVox.Tts.csproj" />
+  </Folder>
+  <Folder Name="/src/LeafVox.App/">
+    <Project Path="src/LeafVox.App/LeafVox.App.Desktop/LeafVox.App.Desktop.csproj" />
+    <Project Path="src/LeafVox.App/LeafVox.App/LeafVox.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LeafVox.Core.Tests/LeafVox.Core.Tests.csproj" />
+  </Folder>
+</Solution>
