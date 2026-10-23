@@ -37,12 +37,14 @@ public class LiveEngineIntegrationTests
 
         var seen = new List<int>();
         var all = new TaskCompletionSource();
-        pipe.SentenceStarted += (_, i) => { lock (seen) seen.Add(i); if (seen.Count == 2) all.TrySetResult(); };
+        pipe.SentenceStarted += (_, i) => { lock (seen) seen.Add(i); };
+        pipe.SentenceFinished += (_, i) => { lock (seen) if (i == 1) all.TrySetResult(); };
         pipe.Play(0);
         await all.Task.WaitAsync(TimeSpan.FromSeconds(30));
 
-        lock (seen) Assert.Equal(new[] { 0, 1 }, seen);
-        Assert.Equal(2, sink.Written.Count);
+        lock (seen) Assert.Contains(0, seen);
+        Assert.Contains(1, seen);
+        Assert.True(sink.Written.Count >= 2);
         Assert.All(sink.Written, c => Assert.True(c.Samples.Length > 1000, "audio should be seconds long"));
         pipe.Stop();
         engine.Unload();

@@ -104,6 +104,23 @@ public class SpeechPipelineTests
     }
 
     [Fact]
+    public async Task PlayOnce_Stops_After_One_Sentence()
+    {
+        var (pipe, engine, _) = NewPipeline(60);
+        var seen = new List<int>();
+        var done = new TaskCompletionSource();
+        pipe.SentenceStarted += (_, i) => { lock (seen) seen.Add(i); };
+        pipe.SentenceFinished += (_, i) => { if (i == 3) done.TrySetResult(); };
+        pipe.PlayOnce(3);
+        await done.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(150); // let any stray batches slip through if buggy
+        pipe.Stop();
+        lock (seen) Assert.Equal(new[] { 3 }, seen);
+        Assert.True(engine.Synthesized.Count <= 3, "must not synthesize far ahead of a single line");
+        await pipe.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Engine_Failure_Raises_Failed_Event()
     {
         var (pipe, engine, _) = NewPipeline(2);

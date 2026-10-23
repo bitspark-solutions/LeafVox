@@ -24,6 +24,7 @@ public sealed class SpeechPipeline : IAsyncDisposable
     private volatile float _speed = 1.0f;
     private volatile int _speakerId;
     private volatile SpeechState _state = SpeechState.Stopped;
+    private volatile int _stopAfter = -1;
 
     public event EventHandler<int>? SentenceStarted;
     public event EventHandler<int>? SentenceFinished;
@@ -48,7 +49,12 @@ public sealed class SpeechPipeline : IAsyncDisposable
     }
 
     /// <summary>Play from the given sentence (or current position when negative).</summary>
-    public void Play(int fromIndex = -1)
+    public void Play(int fromIndex = -1) => PlayCore(fromIndex, -1);
+
+    /// <summary>Play exactly one sentence, then stop.</summary>
+    public void PlayOnce(int index) => PlayCore(index, index);
+
+    private void PlayCore(int fromIndex, int stopAfter)
     {
         var spine = _spine;
         if (spine is null || spine.Sentences.Count == 0) return;
@@ -62,6 +68,7 @@ public sealed class SpeechPipeline : IAsyncDisposable
             _sink.Stop();
             _sink.Open(_engine.SampleRate > 0 ? _engine.SampleRate : 22050);
             _index = fromIndex >= 0 ? spine.ClampIndex(fromIndex) : spine.ClampIndex(_index);
+            _stopAfter = stopAfter;
             _state = SpeechState.Playing;
 
             var queue = Channel.CreateBounded<PcmBatch>(new BoundedChannelOptions(PrefetchDepth)
@@ -142,6 +149,7 @@ public sealed class SpeechPipeline : IAsyncDisposable
                         await Task.Delay(40, token).ConfigureAwait(false);
                 }
                 await writer.WriteAsync(new PcmBatch(i, chunks), token).ConfigureAwait(false);
+                if (i == _stopAfter) break;
             }
         }
         catch (OperationCanceledException) { /* expected on stop/seek */ }
@@ -179,6 +187,7 @@ public sealed class SpeechPipeline : IAsyncDisposable
                 boundary += duration;
                 naturalEnd = batch.SentenceIndex == spine.Sentences.Count - 1;
                 RaiseOnUi(SentenceFinished, batch.SentenceIndex);
+                if (batch.SentenceIndex == _stopAfter) break;
             }
         }
         catch (OperationCanceledException) { }
