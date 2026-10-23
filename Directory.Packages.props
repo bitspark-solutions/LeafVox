@@ -26,6 +26,7 @@
 
     <!-- Audio -->
     <PackageVersion Include="NAudio" Version="3.3.0" />
+    <PackageVersion Include="NAudio.Dmo" Version="3.3.0" />
 
     <!-- Persistence -->
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.7" />

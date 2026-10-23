@@ -80,6 +80,15 @@ public sealed class ReadingSpine
         }
     }
 
+    /// <summary>Builds a spine directly from sentence texts (test/preview seam).</summary>
+    public static ReadingSpine FromSentences(IReadOnlyList<string> texts)
+    {
+        var sentences = texts
+            .Select((t, i) => new Sentence(i, 1, t, new[] { new Box(50, 800 - 18.0 * i, 400, 12) }))
+            .ToList();
+        return new ReadingSpine(sentences, new Dictionary<int, int> { [1] = 0 }, new HashSet<int>(), 1);
+    }
+
     /// <summary>First sentence index that belongs to the given page (or the last sentence if none).</summary>
     public int IndexForPage(int pageNumber)
     {

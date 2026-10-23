@@ -8,7 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="NAudio" />
+    <PackageReference Include="NAudio.Dmo" />
     <PackageReference Include="org.k2fsa.sherpa.onnx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LeafVox.Core\LeafVox.Core.csproj" />
   </ItemGroup>
 
 </Project>

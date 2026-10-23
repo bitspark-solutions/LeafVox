@@ -9,5 +9,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/LeafVox.Core.Tests/LeafVox.Core.Tests.csproj" />
+    <Project Path="tests/LeafVox.Tts.Tests/LeafVox.Tts.Tests.csproj" />
   </Folder>
 </Solution>
