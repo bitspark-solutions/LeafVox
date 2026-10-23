@@ -16,4 +16,7 @@ dotnet run --project spikes/SpikePdf
 echo "== spike B: offline TTS =="
 dotnet run --project spikes/SpikeTts
 
+echo "== spike C: cross-platform sink =="
+dotnet run --project spikes/SpikeProbe
+
 echo "== ALL VERIFIED =="

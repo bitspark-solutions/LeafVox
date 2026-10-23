@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using LeafVox.Core;
 
 namespace LeafVox.Tts.Tests;
@@ -46,6 +47,42 @@ public class LiveEngineIntegrationTests
         Assert.Contains(1, seen);
         Assert.True(sink.Written.Count >= 2);
         Assert.All(sink.Written, c => Assert.True(c.Samples.Length > 1000, "audio should be seconds long"));
+        pipe.Stop();
+        engine.Unload();
+        await pipe.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Kokoro_Natural_Voice_Synthesizes_Real_Audio()
+    {
+        var kokoroDir = Path.Combine(Paths.Models, "kokoro-en-v0_19");
+        if (!File.Exists(Path.Combine(kokoroDir, "voices.bin"))) return; // vacuous pass without the 320 MB model
+
+        var engine = new SherpaOnnxEngine();
+        var sink = new FakeAudioSink();
+        var voice = VoiceCatalog.Find("kokoro-en-v0_19")!;
+
+        var load = Stopwatch.StartNew();
+        await engine.LoadAsync(voice, kokoroDir);
+        load.Stop();
+        Assert.True(engine.IsReady);
+
+        var pipe = new SpeechPipeline(engine, sink);
+        pipe.SetSpine(ReadingSpine.FromSentences(new[]
+        {
+            "LeafVox reads any P D F aloud. It is fast, it is free, and it never needs the internet.",
+        }));
+        var done = new TaskCompletionSource();
+        pipe.SentenceFinished += (_, i) => { if (i == 0) done.TrySetResult(); };
+        var sw = Stopwatch.StartNew();
+        pipe.Play(0);
+        await done.Task.WaitAsync(TimeSpan.FromSeconds(60));
+        sw.Stop();
+
+        double audioSec = sink.Written.Sum(c => c.DurationSeconds);
+        Assert.True(audioSec > 4, $"expected seconds of audio, got {audioSec:F2}");
+        Assert.True(sw.Elapsed.TotalSeconds / audioSec < 3.0,
+            $"Kokoro must synthesize faster than 3x realtime on CPU (was {sw.Elapsed.TotalSeconds / audioSec:F2})");
         pipe.Stop();
         engine.Unload();
         await pipe.DisposeAsync();

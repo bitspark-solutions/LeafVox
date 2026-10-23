@@ -13,8 +13,12 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />
-    <!-- Native sherpa-onnx runtime for this OS/arch. Phase 6 adds linux-x64/osx-arm64/osx-x64 entries. -->
+    <!-- Native sherpa-onnx runtime for the build host's OS/arch (each publish target builds on its own OS). -->
     <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
   </ItemGroup>
 
   <ItemGroup>

@@ -73,16 +73,24 @@ public sealed class VoiceRepository
     private static string? ReadLicense(string modelDir)
     {
         var card = Path.Combine(modelDir, "MODEL_CARD");
-        if (!File.Exists(card)) return null;
-        try
+        if (File.Exists(card))
         {
-            foreach (var line in File.ReadLines(card))
+            try
             {
-                var idx = line.IndexOf("License:", StringComparison.OrdinalIgnoreCase);
-                if (idx >= 0) return line[(idx + "License:".Length)..].Trim();
+                foreach (var line in File.ReadLines(card))
+                {
+                    var idx = line.IndexOf("License:", StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0) return line[(idx + "License:".Length)..].Trim();
+                }
             }
+            catch (IOException) { }
         }
-        catch (IOException) { }
+        var lic = Path.Combine(modelDir, "LICENSE");
+        if (File.Exists(lic))
+        {
+            try { return File.ReadLines(lic).FirstOrDefault(l => l.Trim().Length > 0); }
+            catch (IOException) { }
+        }
         return null;
     }
 }
