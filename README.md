@@ -9,7 +9,9 @@
 - 🔂 Read-this-line-only, ⏮/⏭ sentence steps, speed 0.5×–3×, ⌨ keyboard: `Space` play/pause, `←/→` sentence, `Esc` stop
 - 🗣 Free voice manager: one-click download of the whole **Kokoro-82M** natural tier and 10+ **Piper** light voices (incl. Bangla, Hindi, Arabic, DE/FR/ES) — licenses shown per voice
 - 🕘 Recents library, 🌙 sleep timer, per-app voice/speed settings
-- 🧠 Scanned-PDF detection (tells you which pages have no text layer instead of failing silently)
+- 🧠 Scanned-PDF detection + one-click **local OCR** (Tesseract, free language data auto-download) rescues text from image-only pages
+- 📄 **Page view**: true rendered pages (pdfium) with the same karaoke highlight overlay — double-tap any spot on the page to start reading there
+- ★ Bookmarks per book (jump list in the header) · ⌨ media keys while the app is focused
 
 ## Zero-cost promise
 No subscriptions, no API keys, no telemetry, no hosted CI. Every dependency is MIT/Apache/BSD — see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Voices are downloaded by the user from official free releases; licenses are shown in-app.
@@ -39,7 +41,7 @@ spikes/                     feasibility code kept as living docs
 scripts/                    verify-all.sh + per-OS publish scripts
 ```
 
-## Roadmap (Phase 8 — deferred, honest list)
-Original-layout page view (PDFium/Docnet overlay) · OCR for scanned PDFs (Tesseract) · Android/iOS workload enablement · bookmark list UI · word-level highlight timing.
+## Roadmap (deferred, honest list)
+Android/iOS workload enablement + store packaging · word-level highlight timing · OS-level media-key integration (SMTC/MPRIS) · mobile layouts.
 
-Status: Phases 0–7 complete; see `.plan/2026-10-23_master_plan.md` and `.progress/`.
+Status: Phases 0–8 complete (page view + OCR shipped in the Phase 8 pass); see `.plan/2026-10-23_master_plan.md` and `.progress/`.
