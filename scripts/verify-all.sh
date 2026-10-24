@@ -8,7 +8,10 @@ echo "== build =="
 dotnet build LeafVox.slnx -c Debug --nologo -v q
 
 echo "== unit tests =="
-dotnet test tests/LeafVox.Core.Tests -c Debug --nologo -v q
+dotnet test LeafVox.slnx -c Debug --nologo -v q
+
+echo "== repo rules =="
+bash scripts/check-one-class-per-file.sh
 
 echo "== spike A: PDF spine =="
 dotnet run --project spikes/SpikePdf
