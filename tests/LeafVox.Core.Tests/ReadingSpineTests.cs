@@ -96,6 +96,24 @@ public class ReadingSpineTests : IDisposable
     }
 
     [Fact]
+    public void LineOverrides_Rescue_Scanned_Pages()
+    {
+        var path = TestPdf.Build(p => p.Line("Real text page one."), p => { });
+        using var book = Open(path);
+
+        var baseline = ReadingSpine.Build(book);
+        Assert.True(baseline.PageIsScanned(2));
+
+        var overrides = new Dictionary<int, IReadOnlyList<Line>>
+        {
+            [2] = new[] { new Line("Recovered by OCR.", 700, new[] { new Box(50, 690, 300, 14) }) },
+        };
+        var fixed1 = ReadingSpine.Build(book, overrides);
+        Assert.False(fixed1.PageIsScanned(2));
+        Assert.Contains(fixed1.Sentences, s => s.PageNumber == 2 && s.Text == "Recovered by OCR.");
+    }
+
+    [Fact]
     public void Junk_File_Throws_Corrupt()
     {
         var path = Path.Combine(Path.GetTempPath(), $"leafvox-junk-{Guid.NewGuid():N}.pdf");

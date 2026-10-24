@@ -9,6 +9,10 @@ components. Licenses below are as of the pinned versions in
 | Avalonia (UI, Themes.Fluent, Fonts.Inter, Desktop) | 12.1.4 | MIT | App UI, cross-platform windowing |
 | CommunityToolkit.Mvvm | 8.4.2 | MIT | MVVM source-generated view-models |
 | PdfPig (UglyToad.PdfPig) | 0.1.16 | Apache-2.0 | PDF parsing, text + layout extraction |
+| PDFtoImage | 5.2.1 | MIT | PDF page rendering (pdfium → SkiaSharp) |
+| SkiaSharp (+ native assets) | 3.119.2 | MIT | raster surfaces for page view |
+| bblanchon.PDFium (Win32/Linux/macOS) | 147.x | BSD-3 (PDFium) | PDF rasterization engine |
+| Tesseract (charweini) | 5.2.0 | Apache-2.0 | OCR fallback for scanned pages (Windows natives bundled) |
 | sherpa-onnx (org.k2fsa.sherpa.onnx + per-RID runtime pkgs) | 1.13.8 | Apache-2.0 | Offline neural TTS inference (ONNX Runtime based) |
 | ONNX Runtime (transitive via sherpa-onnx binaries) | — | MIT | Model execution |
 | NAudio + NAudio.Dmo | 3.3.0 | MIT | Windows audio playback (DirectSound) |
@@ -29,6 +33,6 @@ Each archive carries its own MODEL_CARD / LICENSE:
 Displaying the license line per voice in the voice manager satisfies the
 attribution requirements; redistribute any voice elsewhere only per its own terms.
 
-## Not used
-Docnet.Core (PDFium page rendering) was evaluated for the "original page" view
-and deferred to Phase 8 — the current build ships neither.
+## OCR language data
+`eng.traineddata` is downloaded by the user on first "OCR scanned pages" click from
+the official `tesseract-ocr/tessdata_fast` repo (Apache-2.0, ~4 MB). Not redistributed.

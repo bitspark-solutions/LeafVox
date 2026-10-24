@@ -22,4 +22,10 @@ dotnet run --project spikes/SpikeTts
 echo "== spike C: cross-platform sink =="
 dotnet run --project spikes/SpikeProbe
 
+echo "== spike D: page rendering =="
+dotnet run --project spikes/SpikePage
+
+echo "== spike E: OCR fallback =="
+dotnet run --project spikes/SpikeOcr
+
 echo "== ALL VERIFIED =="

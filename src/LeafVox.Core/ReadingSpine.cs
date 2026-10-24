@@ -24,11 +24,16 @@ public sealed class ReadingSpine
     public bool PageIsScanned(int pageNumber) => _scannedPages.Contains(pageNumber);
 
     /// <summary>Parse an entire document into a spine. Do this off the UI thread.</summary>
-    public static ReadingSpine Build(PdfBook book)
+    public static ReadingSpine Build(PdfBook book, IReadOnlyDictionary<int, IReadOnlyList<Line>>? lineOverrides = null)
     {
         var raw = new List<PageText>(book.NumberOfPages);
         for (int p = 1; p <= book.NumberOfPages; p++)
             raw.Add(book.ExtractPage(p));
+
+        if (lineOverrides is not null)
+            for (int i = 0; i < raw.Count; i++)
+                if (lineOverrides.TryGetValue(raw[i].PageNumber, out var lines) && lines.Count > 0)
+                    raw[i] = new PageText(raw[i].PageNumber, raw[i].Height, lines);
 
         var pages = HeaderFooterFilter.Apply(raw);
 
