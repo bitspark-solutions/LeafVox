@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Estrol.Miniaudio-CS" />
+    <PackageReference Include="PDFtoImage" />
   </ItemGroup>
 
   <ItemGroup>
