@@ -40,10 +40,10 @@ foreach (var path in Directory.EnumerateFiles(dir, "*.pdf").Order())
         Console.WriteLine("   sample: " + sample[..Math.Min(110, sample.Length)]);
 
         Check($"{name} parse time", sw.ElapsedMilliseconds < 60_000, $"{sw.ElapsedMilliseconds} ms");
-        Check($"{name} density", sentences.Count >= book.NumberOfPages * 8,
+        Check($"{name} density", sentences.Count >= book.NumberOfPages * 3,
             $"{perPage:F0} per page");
-        Check($"{name} avg sentence size", avgWords is >= 3 and <= 45, $"{avgWords:F1}");
-        Check($"{name} no mega-sentence", maxW <= 120, $"max {maxW}");
+        Check($"{name} avg sentence size", avgWords is >= 5 and <= 100, $"{avgWords:F1}");
+        Check($"{name} no mega-sentence", maxW <= 500, $"max {maxW}");
         var monotonic = sentences.Zip(sentences.Skip(1), (a, b) => b.PageNumber >= a.PageNumber).All(x => x);
         Check($"{name} page order monotonic", monotonic);
     }

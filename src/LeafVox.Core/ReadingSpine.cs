@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace LeafVox.Core;
 
 /// <summary>
@@ -53,13 +55,87 @@ public sealed class ReadingSpine
             }
             firstOnPage.TryAdd(page.PageNumber, sentences.Count);
 
-            foreach (var line in page.Lines)
+            var pageSentences = AssembleSentences(page);
+            int idx = sentences.Count;
+            foreach (var s in pageSentences)
             {
-                sentences.Add(new Sentence(sentences.Count, page.PageNumber, line.Text, line.Boxes, line.Words));
+                sentences.Add(new Sentence(idx++, page.PageNumber, s.Text, s.Boxes, s.Words, s.Lines));
             }
         }
 
         return new ReadingSpine(sentences, firstOnPage, scanned, book.NumberOfPages);
+    }
+
+    private const int MaxSentenceWords = 400; // safety: never speak a 10-minute "sentence"
+
+    /// <summary>
+    /// Assembles a page's visual lines into speakable sentences. Wrapped lines flow into
+    /// one sentence until a line ends with <c>.!?</c>. Hyphenation across lines
+    /// (<c>read-\ning</c>) is rejoined as one word. Each returned sentence carries every
+    /// word box that belongs to it for highlighting.
+    /// </summary>
+    private static List<(string Text, List<Box> Boxes, List<Word> Words, List<Line> Lines)> AssembleSentences(PageText page)
+    {
+        var result = new List<(string, List<Box>, List<Word>, List<Line>)>();
+        var currentLines = new List<Line>();
+        var currentWords = new List<Word>();
+        var currentBoxes = new List<Box>();
+        var currentText = new StringBuilder();
+
+        void Flush()
+        {
+            if (currentLines.Count == 0) return;
+            result.Add((currentText.ToString().Trim(),
+                new List<Box>(currentBoxes),
+                new List<Word>(currentWords),
+                new List<Line>(currentLines)));
+            currentLines.Clear();
+            currentWords.Clear();
+            currentBoxes.Clear();
+            currentText.Clear();
+        }
+
+        foreach (var line in page.Lines)
+        {
+            if (currentLines.Count > 0)
+            {
+                var prev = currentText.ToString().TrimEnd();
+                if (EndsSentence(prev) || currentText.Length > 0 && currentText.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries).Length >= MaxSentenceWords)
+                {
+                    Flush();
+                    currentText.Append(line.Text);
+                }
+                else if (prev.EndsWith('-'))
+                {
+                    // Hyphenation join across lines: drop the hyphen, append directly.
+                    currentText.Length -= 1;
+                    currentText.Append(line.Text);
+                }
+                else
+                {
+                    currentText.Append(' ').Append(line.Text);
+                }
+            }
+            else
+            {
+                currentText.Append(line.Text);
+            }
+
+            currentLines.Add(line);
+            currentWords.AddRange(line.Words);
+            currentBoxes.AddRange(line.Boxes);
+        }
+
+        Flush();
+        return result.Select(r => (r.Item1, r.Item2, r.Item3, r.Item4)).ToList();
+    }
+
+    /// <summary>True when the trimmed text ends with a real sentence terminator.</summary>
+    private static bool EndsSentence(string text)
+    {
+        if (text.Length == 0) return false;
+        char c = text[^1];
+        return c == '.' || c == '!' || c == '?';
     }
 
 
@@ -67,7 +143,7 @@ public sealed class ReadingSpine
     public static ReadingSpine FromSentences(IReadOnlyList<string> texts)
     {
         var sentences = texts
-            .Select((t, i) => new Sentence(i, 1, t, new[] { new Box(50, 800 - 18.0 * i, 400, 12) }))
+            .Select((t, i) => new Sentence(i, 1, t, new[] { new Box(50, 800 - 18.0 * i, 400, 12) }, Array.Empty<Word>(), Array.Empty<Line>()))
             .ToList();
         return new ReadingSpine(sentences, new Dictionary<int, int> { [1] = 0 }, new HashSet<int>(), 1);
     }

@@ -25,16 +25,16 @@ public class ReadingSpineTests : IDisposable
     }
 
     [Fact]
-    public void Hyphenated_Line_Stays_On_Its_Own_Line()
+    public void Hyphenated_Lines_Join_Into_One_Sentence()
     {
         var path = TestPdf.Build(p => p
             .Line("This report covers read-")
             .Line("ing large books end to end."));
         using var book = Open(path);
         var spine = ReadingSpine.Build(book);
-        Assert.Equal(2, spine.Sentences.Count);
-        Assert.Equal("This report covers read-", spine.Sentences[0].Text);
-        Assert.Equal("ing large books end to end.", spine.Sentences[1].Text);
+        Assert.Equal(1, spine.Sentences.Count);
+        Assert.Equal("This report covers reading large books end to end.", spine.Sentences[0].Text);
+        Assert.True(spine.Sentences[0].Words.Count >= 3, "words should be populated");
     }
 
     [Fact]
