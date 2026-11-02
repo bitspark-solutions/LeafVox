@@ -54,4 +54,21 @@ public class SentenceBuilderTests
         Assert.Equal(2, s.Count);
         Assert.Equal("He said \"Come here.\"", s[0]);
     }
+
+    [Fact]
+    public void CapLengths_Splits_Monster_Sentences()
+    {
+        var big = string.Join(' ', Enumerable.Range(0, 900).Select(i => (i % 40 == 39) ? "word," : "word"));
+        var capped = SentenceBuilder.CapLengths(new[] { big });
+        Assert.True(capped.Count >= 3);
+        Assert.All(capped, s => Assert.True(s.Split(' ').Length <= 400, "chunk too big"));
+        Assert.Equal(900, capped.Sum(s => s.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length));
+    }
+
+    [Fact]
+    public void CapLengths_Keeps_Normal_Sentences()
+    {
+        var one = "Short and completely normal sentence.";
+        Assert.Equal(new[] { one }, SentenceBuilder.CapLengths(new[] { one }));
+    }
 }

@@ -37,7 +37,7 @@ public static class LineExtractor
             {
                 foreach (var tl in block.TextLines)
                 {
-                    var text = TextNormalizer.Normalize(tl.Text);
+                    var text = TextNormalizer.Normalize(ReconstructWithSpaces(tl));
                     if (text.Length == 0) continue;
                     var b = tl.BoundingBox;
                     lines.Add(new Line(text, b.Top,
@@ -50,5 +50,36 @@ public static class LineExtractor
         {
             return SimpleSegmenter.ExtractLines(words);
         }
+    }
+
+    /// <summary>
+    /// Rebuilds a text line from letters, inserting spaces where the horizontal gap
+    /// between glyphs is word-sized. Fixes PDFs whose fonts carry no space glyph
+    /// (words run together as "inrespectandadmiration").
+    /// </summary>
+    internal static string ReconstructWithSpaces(TextLine line)
+    {
+        var letters = line.Words.SelectMany(w => w.Letters).ToArray();
+        if (letters.Length == 0) return line.Text;
+        var wordEnds = new HashSet<Letter>(line.Words.Select(w => w.Letters.Count > 0 ? w.Letters[^1] : null!).Where(x => x is not null)!);
+
+        var sb = new System.Text.StringBuilder(line.Text.Length + 16);
+        Letter? prev = null;
+        foreach (var l in letters)
+        {
+            if (prev is not null)
+            {
+                double gapX = l.GlyphRectangle.Left - prev.GlyphRectangle.Right;
+                bool explicitSpace = prev.Value.Length == 0 || l.Value.Length == 0
+                    || prev.Value[^1] == ' ' || l.Value[0] == ' '
+                    || prev.Value[^1] == '\u00a0' || l.Value[0] == '\u00a0';
+                double size = Math.Max(1.0, Math.Min(prev.PointSize, l.PointSize));
+                bool wordBoundary = wordEnds.Contains(prev);
+                if (!explicitSpace && (wordBoundary || gapX > 0.22 * size)) sb.Append(' ');
+            }
+            sb.Append(l.Value);
+            prev = l;
+        }
+        return sb.ToString();
     }
 }

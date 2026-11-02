@@ -97,6 +97,36 @@ public static class SentenceBuilder
         return merged;
     }
 
+    /// <summary>
+    /// Splits monster sentences (table dumps, appendix prompts) into listenable chunks.
+    /// Cuts near punctuation when possible, hard-cuts at whitespace otherwise.
+    /// </summary>
+    public static IReadOnlyList<string> CapLengths(IReadOnlyList<string> sentences, int maxWords = 320)
+    {
+        var result = new List<string>(sentences.Count);
+        foreach (var s in sentences)
+        {
+            var words = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length <= maxWords) { result.Add(s); continue; }
+
+            int start = 0;
+            while (words.Length - start > maxWords + maxWords / 4)
+            {
+                int cut = start + maxWords;
+                // back off to a nearby punctuation boundary
+                int floor = start + maxWords * 3 / 5;
+                while (cut > floor && !words[cut - 1].EndsWith(',') && !words[cut - 1].EndsWith(';')
+                       && !words[cut - 1].EndsWith(':') && !words[cut - 1].EndsWith('.'))
+                    cut--;
+                if (cut <= floor) cut = start + maxWords;
+                result.Add(string.Join(' ', words[start..cut]));
+                start = cut;
+            }
+            result.Add(string.Join(' ', words[start..]));
+        }
+        return result;
+    }
+
     private static bool EndsSentence(string text, int dotIndex, string token)
     {
         int next = dotIndex + 1;

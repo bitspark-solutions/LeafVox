@@ -67,7 +67,7 @@ public sealed class ReadingSpine
         if (page.Lines.Count == 0) yield break;
         var texts = page.Lines.Select(l => l.Text).ToArray();
         var joined = SentenceBuilder.JoinLines(texts);
-        var sents = SentenceBuilder.Split(joined);
+        var sents = SentenceBuilder.CapLengths(SentenceBuilder.Split(joined));
         // Map sentences back to boxes by matching their source lines in order.
         int lineCursor = 0;
         foreach (var s in sents)
