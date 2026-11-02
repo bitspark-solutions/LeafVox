@@ -13,17 +13,17 @@ public static class LineExtractor
     public static IReadOnlyList<Line> ExtractLines(Page page)
     {
         var letters = DuplicateOverlappingTextProcessor.Get(page.Letters);
-        var words = NearestNeighbourWordExtractor.Instance
+        var pdfWords = NearestNeighbourWordExtractor.Instance
             .GetWords(letters)
             .Where(w => !string.IsNullOrWhiteSpace(w.Text))
             .ToArray();
 
-        if (words.Length == 0) return Array.Empty<Line>();
+        if (pdfWords.Length == 0) return Array.Empty<Line>();
 
         try
         {
-            var blocks = DocstrumBoundingBoxes.Instance.GetBlocks(words);
-            if (blocks.Count == 0) return SimpleSegmenter.ExtractLines(words);
+            var blocks = DocstrumBoundingBoxes.Instance.GetBlocks(pdfWords);
+            if (blocks.Count == 0) return SimpleSegmenter.ExtractLines(pdfWords);
 
             // Multi-column pages get an unsupervised reading-order pass; single blocks need none.
             if (blocks.Count > 1)
@@ -40,15 +40,20 @@ public static class LineExtractor
                     var text = TextNormalizer.Normalize(ReconstructWithSpaces(tl));
                     if (text.Length == 0) continue;
                     var b = tl.BoundingBox;
+                    var lineWords = tl.Words.Select(w =>
+                    {
+                        var wb = w.BoundingBox;
+                        return new Word(w.Text, new Box(wb.Left, wb.Bottom, wb.Width, wb.Height));
+                    }).ToList();
                     lines.Add(new Line(text, b.Top,
-                        new[] { new Box(b.Left, b.Bottom, b.Width, b.Height) }));
+                        new[] { new Box(b.Left, b.Bottom, b.Width, b.Height) }, lineWords));
                 }
             }
             return lines;
         }
         catch (Exception)
         {
-            return SimpleSegmenter.ExtractLines(words);
+            return SimpleSegmenter.ExtractLines(pdfWords);
         }
     }
 

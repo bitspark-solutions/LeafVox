@@ -16,7 +16,7 @@ public class ReadingSpineTests : IDisposable
         using var book = Open(path);
         var spine = ReadingSpine.Build(book);
 
-        Assert.Equal(4, spine.Sentences.Count);
+        Assert.Equal(3, spine.Sentences.Count);
         Assert.Equal("LeafVox reads any PDF aloud.", spine.Sentences[0].Text);
         Assert.Equal(1, spine.Sentences[0].PageNumber);
         Assert.Equal(2, spine.Sentences[2].PageNumber);
@@ -25,15 +25,16 @@ public class ReadingSpineTests : IDisposable
     }
 
     [Fact]
-    public void Hyphenated_Line_Becomes_One_Sentence()
+    public void Hyphenated_Line_Stays_On_Its_Own_Line()
     {
         var path = TestPdf.Build(p => p
             .Line("This report covers read-")
             .Line("ing large books end to end."));
         using var book = Open(path);
         var spine = ReadingSpine.Build(book);
-        Assert.Single(spine.Sentences);
-        Assert.Equal("This report covers reading large books end to end.", spine.Sentences[0].Text);
+        Assert.Equal(2, spine.Sentences.Count);
+        Assert.Equal("This report covers read-", spine.Sentences[0].Text);
+        Assert.Equal("ing large books end to end.", spine.Sentences[1].Text);
     }
 
     [Fact]
@@ -120,5 +121,19 @@ public class ReadingSpineTests : IDisposable
         File.WriteAllText(path, "this is not a pdf");
         _files.Add(path);
         Assert.Throws<PdfCorruptException>(() => PdfBook.Open(path));
+    }
+
+    [Fact]
+    public void Words_Populated_With_Boxes()
+    {
+        var path = TestPdf.Build(p => p.Line("Hello world from LeafVox.", 50, 800));
+        using var book = Open(path);
+        var spine = ReadingSpine.Build(book);
+        Assert.Single(spine.Sentences);
+        var s = spine.Sentences[0];
+        Assert.True(s.Words.Count >= 3, $"got {s.Words.Count} words");
+        Assert.All(s.Words, w => Assert.True(w.Box.Width > 0 && w.Box.Height > 0, "word box empty"));
+        Assert.Equal("Hello", s.Words[0].Text);
+        Assert.Equal("world", s.Words[1].Text);
     }
 }

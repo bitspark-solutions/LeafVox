@@ -53,37 +53,15 @@ public sealed class ReadingSpine
             }
             firstOnPage.TryAdd(page.PageNumber, sentences.Count);
 
-            foreach (var s in SplitPage(page))
+            foreach (var line in page.Lines)
             {
-                sentences.Add(new Sentence(sentences.Count, page.PageNumber, s.Text, s.Boxes));
+                sentences.Add(new Sentence(sentences.Count, page.PageNumber, line.Text, line.Boxes, line.Words));
             }
         }
 
         return new ReadingSpine(sentences, firstOnPage, scanned, book.NumberOfPages);
     }
 
-    private static IEnumerable<(string Text, IReadOnlyList<Box> Boxes)> SplitPage(PageText page)
-    {
-        if (page.Lines.Count == 0) yield break;
-        var texts = page.Lines.Select(l => l.Text).ToArray();
-        var joined = SentenceBuilder.JoinLines(texts);
-        var sents = SentenceBuilder.CapLengths(SentenceBuilder.Split(joined));
-        // Map sentences back to boxes by matching their source lines in order.
-        int lineCursor = 0;
-        foreach (var s in sents)
-        {
-            var boxes = new List<Box>();
-            int consumed = 0;
-            while (lineCursor < page.Lines.Count && consumed < s.Length)
-            {
-                var line = page.Lines[lineCursor];
-                boxes.AddRange(line.Boxes);
-                consumed += line.Text.Length + 1;
-                lineCursor++;
-            }
-            yield return (s, boxes.Count > 0 ? boxes : page.Lines[0].Boxes);
-        }
-    }
 
     /// <summary>Builds a spine directly from sentence texts (test/preview seam).</summary>
     public static ReadingSpine FromSentences(IReadOnlyList<string> texts)

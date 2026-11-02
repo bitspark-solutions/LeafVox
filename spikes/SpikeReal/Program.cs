@@ -32,12 +32,10 @@ foreach (var path in Directory.EnumerateFiles(dir, "*.pdf").Order())
         var sentences = spine.Sentences;
         int Wc(LeafVox.Core.Sentence s) => s.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
         double avgWords = sentences.Average(Wc);
-        int frag = sentences.Count(s => Wc(s) <= 2);
         int maxW = sentences.Max(Wc);
-        double fragPct = 100.0 * frag / Math.Max(1, sentences.Count);
         double perPage = (double)sentences.Count / book.NumberOfPages;
-        Console.WriteLine($"\n== {name}: {book.NumberOfPages} pages → {sentences.Count} sentences in {sw.ElapsedMilliseconds} ms");
-        Console.WriteLine($"   avg {avgWords:F1} words | max {maxW} | fragments {frag} ({fragPct:F1} pct) | scanned {spine.ScannedPages.Count}");
+        Console.WriteLine($"\n== {name}: {book.NumberOfPages} pages → {sentences.Count} lines in {sw.ElapsedMilliseconds} ms");
+        Console.WriteLine($"   avg {avgWords:F1} words | max {maxW} | scanned {spine.ScannedPages.Count}");
         var sample = sentences[Math.Min(40, sentences.Count - 1)].Text;
         Console.WriteLine("   sample: " + sample[..Math.Min(110, sample.Length)]);
 
@@ -45,8 +43,7 @@ foreach (var path in Directory.EnumerateFiles(dir, "*.pdf").Order())
         Check($"{name} density", sentences.Count >= book.NumberOfPages * 8,
             $"{perPage:F0} per page");
         Check($"{name} avg sentence size", avgWords is >= 3 and <= 45, $"{avgWords:F1}");
-        Check($"{name} no mega-sentence", maxW <= 500, $"max {maxW}");
-        Check($"{name} low fragmentation", fragPct < 15, $"{fragPct:F1} pct");
+        Check($"{name} no mega-sentence", maxW <= 120, $"max {maxW}");
         var monotonic = sentences.Zip(sentences.Skip(1), (a, b) => b.PageNumber >= a.PageNumber).All(x => x);
         Check($"{name} page order monotonic", monotonic);
     }
