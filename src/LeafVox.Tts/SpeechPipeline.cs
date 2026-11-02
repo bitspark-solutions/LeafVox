@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using LeafVox.Core;
 
@@ -166,16 +167,33 @@ public sealed class SpeechPipeline : IAsyncDisposable
     private async Task ConsumeAsync(ReadingSpine spine, ChannelReader<PcmBatch> reader, CancellationToken token)
     {
         bool naturalEnd = false;
-        var pos = _sink as IAudioPositionProvider;
-        double boundary = 0; // seconds of audio scheduled before the current batch
+        var watch = Stopwatch.StartNew();
+        double expectedSeconds = 0; // audio seconds that should have been spoken by now
         try
         {
             await foreach (var batch in reader.ReadAllAsync(token).ConfigureAwait(false))
             {
                 double duration = batch.Chunks.Sum(c => c.DurationSeconds);
-                if (pos is not null)
-                    await WaitUntilPlayedAsync(pos, boundary, token).ConfigureAwait(false);
+                double sentenceStart = expectedSeconds;
+
+                // Wall-clock timing: don't gate on the sink's position (it can stall).
+                while (watch.Elapsed.TotalSeconds < sentenceStart && !token.IsCancellationRequested)
+                    await Task.Delay(25, token).ConfigureAwait(false);
+
                 token.ThrowIfCancellationRequested();
+
+                // Sink health check: if a real output device lags wall clock by >1.5s, it has
+                // stalled. Stop rather than silently queueing unheard audio. Fake sinks that
+                // never report position skip this check.
+                if (_sink is IAudioPositionProvider pos && watch.Elapsed.TotalSeconds > 1.0)
+                {
+                    double played = pos.PlayedSeconds;
+                    if (played > 0 && watch.Elapsed.TotalSeconds - played > 1.5)
+                    {
+                        RaiseOnUi(Failed, new LeafVoxTtsException("Audio output stalled."));
+                        break;
+                    }
+                }
 
                 _index = batch.SentenceIndex;
                 RaiseOnUi(SentenceStarted, batch.SentenceIndex);
@@ -184,7 +202,12 @@ public sealed class SpeechPipeline : IAsyncDisposable
                     _sink.Write(chunk);
                     token.ThrowIfCancellationRequested();
                 }
-                boundary += duration;
+                expectedSeconds += duration;
+
+                // Wait until this sentence's audio should be done before flagging finished.
+                while (watch.Elapsed.TotalSeconds < expectedSeconds && !token.IsCancellationRequested)
+                    await Task.Delay(25, token).ConfigureAwait(false);
+
                 naturalEnd = batch.SentenceIndex == spine.Sentences.Count - 1;
                 RaiseOnUi(SentenceFinished, batch.SentenceIndex);
                 if (batch.SentenceIndex == _stopAfter) break;
@@ -201,22 +224,12 @@ public sealed class SpeechPipeline : IAsyncDisposable
         }
         finally
         {
-            // Only flip to Stopped if this epoch is still the live one.
             bool live = !token.IsCancellationRequested;
             if (live)
             {
                 _state = SpeechState.Stopped;
                 if (naturalEnd) Finished?.Invoke(this, EventArgs.Empty);
             }
-        }
-    }
-
-    private static async Task WaitUntilPlayedAsync(IAudioPositionProvider pos, double target, CancellationToken token)
-    {
-        var deadline = DateTime.UtcNow.AddSeconds(30); // safety: never hang the pipeline
-        while (pos.PlayedSeconds < target - 0.03 && !token.IsCancellationRequested && DateTime.UtcNow < deadline)
-        {
-            await Task.Delay(25, token).ConfigureAwait(false);
         }
     }
 
