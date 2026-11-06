@@ -10,7 +10,7 @@
 - 🗣 Free voice manager: one-click download of the whole **Kokoro-82M** natural tier and 10+ **Piper** light voices (incl. Bangla, Hindi, Arabic, DE/FR/ES) — licenses shown per voice
 - 🕘 Recents library, 🌙 sleep timer, per-app voice/speed settings
 - 🧠 Scanned-PDF detection + one-click **local OCR** (Tesseract, free language data auto-download) rescues text from image-only pages
-- 📄 **Page view**: true rendered pages (pdfium) with the same karaoke highlight overlay — double-tap any spot on the page to start reading there
+- 📄 **Page view (default)**: continuous, scrollable stack of true rendered pdfium pages — like a real PDF viewer — with karaoke highlight on the page and auto-scroll following playback; double-tap any spot to start reading there; only neighboring pages are rendered (24-bitmap rolling cache)
 - ★ Bookmarks per book (jump list in the header) · ⌨ media keys while the app is focused
 
 ## Zero-cost promise

@@ -7,6 +7,7 @@ components. Licenses below are as of the pinned versions in
 | Component | Version | License | Used for |
 |---|---|---|---|
 | Avalonia (UI, Themes.Fluent, Fonts.Inter, Desktop) | 12.1.4 | MIT | App UI, cross-platform windowing |
+| Avalonia.Controls.ItemsRepeater | 12.0.0 | MIT | Virtualized continuous page view |
 | CommunityToolkit.Mvvm | 8.4.2 | MIT | MVVM source-generated view-models |
 | PdfPig (UglyToad.PdfPig) | 0.1.16 | Apache-2.0 | PDF parsing, text + layout extraction |
 | PDFtoImage | 5.2.1 | MIT | PDF page rendering (pdfium → SkiaSharp) |
