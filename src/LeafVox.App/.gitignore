@@ -384,7 +384,8 @@ test-results/
 
 # Mac bundle stuff
 *.dmg
-*.app
+# NOTE: do not ignore "*.app" here — it matches the LeafVox.App project tree itself.
+# macOS .app bundles only ever appear under bin/ (already ignored above).
 
 # content below from: https://github.com/github/gitignore/blob/master/Global/macOS.gitignore
 # General

@@ -1,0 +1,181 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:LeafVox.App.ViewModels"
+             x:Class="LeafVox.App.Views.MainView"
+             x:DataType="vm:MainViewModel"
+             Background="#17181C">
+
+  <UserControl.Styles>
+    <Style Selector="Border.current">
+      <Setter Property="Background" Value="#2F6FE0"/>
+      <Setter Property="CornerRadius" Value="5"/>
+    </Style>
+    <Style Selector="Border.current TextBlock">
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.tool">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="10,6"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="Button.tool:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#26FFFFFF"/>
+      <Setter Property="CornerRadius" Value="6"/>
+    </Style>
+    <Style Selector="Button.transport">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Width" Value="44"/>
+      <Setter Property="Height" Value="44"/>
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="Foreground" Value="#E6E8EF"/>
+    </Style>
+    <Style Selector="Button.play">
+      <Setter Property="Background" Value="#2F6FE0"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Width" Value="52"/>
+      <Setter Property="Height" Value="52"/>
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="CornerRadius" Value="26"/>
+    </Style>
+    <Style Selector="TextBlock.meta">
+      <Setter Property="Foreground" Value="#9AA1B0"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+    <Style Selector="ListBox.flat ListBoxItem">
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Margin" Value="0,2"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="ListBox.flat ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+
+    <!-- Header -->
+    <Border DockPanel.Dock="Top" Padding="14,10" Background="#1D1F25"
+            BorderBrush="#26FFFFFF" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto">
+        <Button Classes="tool" Content="📂 Open PDF" Click="OnOpenClick"/>
+        <Button Classes="tool" Grid.Column="1" Content="🕘 Recent" Margin="4,0,0,0">
+          <Button.Flyout>
+            <MenuFlyout Opening="OnRecentOpening"/>
+          </Button.Flyout>
+        </Button>
+        <Button Classes="tool" Grid.Column="2" Content="🗣 Voices" Click="OnVoicesClick" Margin="4,0,0,0"/>
+        <Button Classes="tool" Grid.Column="3" Content="{Binding ViewLabel}" ToolTip.Tip="Toggle page / flow view"
+                Command="{Binding ToggleViewCommand}" Margin="4,0,0,0"/>
+        <Button Classes="tool" Grid.Column="4" Content="★" ToolTip.Tip="Bookmark this line"
+                Command="{Binding ToggleBookmarkCommand}" Margin="4,0,0,0"/>
+        <Button Classes="tool" Grid.Column="5" Content="📑" ToolTip.Tip="Bookmarks" Margin="4,0,0,0">
+          <Button.Flyout>
+            <MenuFlyout Opening="OnBookmarksOpening"/>
+          </Button.Flyout>
+        </Button>
+        <Button Classes="tool" Grid.Column="6" Content="🔍 OCR" ToolTip.Tip="Recover text from scanned pages (free, local)"
+                IsVisible="{Binding HasScannedPages}" Command="{Binding OcrScannedCommand}" Margin="4,0,0,0"/>
+        <StackPanel Grid.Column="7" VerticalAlignment="Center" Margin="14,0" Spacing="2">
+          <TextBlock Text="{Binding BookTitle}" FontSize="14" FontWeight="SemiBold"
+                     Foreground="#E6E8EF" TextTrimming="CharacterEllipsis"/>
+          <TextBlock Classes="meta" Text="{Binding Status}" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+        <TextBlock Grid.Column="8" Classes="meta" Text="{Binding VoiceLabel}"
+                   VerticalAlignment="Center" Margin="0,0,12,0"/>
+        <ProgressBar Grid.Column="9" Width="90" Height="4" VerticalAlignment="Center"
+                     IsIndeterminate="{Binding IsBusy}"/>
+      </Grid>
+    </Border>
+
+    <!-- Transport bar -->
+    <Border DockPanel.Dock="Bottom" Background="#1D1F25" BorderBrush="#26FFFFFF"
+            BorderThickness="0,1,0,0" Padding="10,8">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <Button Classes="transport" Content="⏮" Command="{Binding PreviousCommand}"/>
+          <Button Classes="play" Content="{Binding PlayGlyph}" Command="{Binding TogglePlayCommand}"/>
+          <Button Classes="transport" Content="⏭" Command="{Binding NextCommand}"/>
+          <Button Classes="transport" Content="⏹" Command="{Binding StopCommand}"/>
+          <Button Classes="transport" Content="🔂" ToolTip.Tip="Read this line only"
+                  Command="{Binding ReadThisLineCommand}"/>
+          <Button Classes="transport" Content="{Binding SleepLabel}" ToolTip.Tip="Sleep timer"
+                  Command="{Binding SetSleepCommand}" CommandParameter="15"/>
+        </StackPanel>
+        <TextBlock Grid.Column="5" Classes="meta" Text="speed" VerticalAlignment="Center"/>
+        <Slider Grid.Column="6" Width="120" Minimum="0.5" Maximum="3" TickFrequency="0.25"
+                Value="{Binding Speed}" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="7" Classes="meta" VerticalAlignment="Center" Margin="8,0,0,0"
+                   Text="{Binding PositionLabel}"/>
+      </Grid>
+    </Border>
+
+    <!-- Reader area: flow list or rendered page -->
+    <Grid>
+    <ListBox x:Name="SentenceList" Classes="flat" IsVisible="{Binding !UsePageView}"
+             ItemsSource="{Binding Sentences}"
+             SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
+             Background="Transparent"
+             BorderThickness="0"
+             Padding="8,12"
+             DoubleTapped="OnLineDoubleTapped"
+             SelectionMode="Single">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:SentenceVm">
+          <Border Padding="6,4" Background="{Binding CurrentBackground}">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                         FontSize="17" LineHeight="26" Foreground="#C9CED9"/>
+              <TextBlock Grid.Column="1" Classes="meta" Text="{Binding PageLabel}"
+                         VerticalAlignment="Top" Margin="8,4,2,0" Opacity="0.4"/>
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+      <ListBox.ContextMenu>
+        <ContextMenu>
+          <MenuItem Header="Read from here"
+                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).ReadFromSelectedCommand}"/>
+        </ContextMenu>
+      </ListBox.ContextMenu>
+    </ListBox>
+
+    <ScrollViewer x:Name="PageScroll" IsVisible="{Binding UsePageView}" Background="#101115">
+      <ItemsRepeater x:Name="PageRepeater" ItemsSource="{Binding Pages}">
+        <ItemsRepeater.Layout>
+          <StackLayout Orientation="Vertical" Spacing="12"/>
+        </ItemsRepeater.Layout>
+        <ItemsRepeater.ItemTemplate>
+          <DataTemplate x:DataType="vm:PageVm">
+            <StackPanel HorizontalAlignment="Center" Spacing="2">
+              <Grid Width="{Binding DisplayWidth}" Height="{Binding DisplayHeight}"
+                    Background="Transparent" DoubleTapped="OnPageDoubleTapped">
+                <Image Source="{Binding Image}"/>
+                <ItemsControl ItemsSource="{Binding HighlightBoxes}" IsHitTestVisible="False">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><Canvas/></ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:HighlightBoxVm">
+                      <Rectangle Width="{Binding Width}" Height="{Binding Height}"
+                                 Canvas.Left="{Binding Left}" Canvas.Top="{Binding Top}"
+                                 Fill="#662F6FE0" Stroke="#FF2F6FE0" StrokeThickness="1.2"
+                                 RadiusX="4" RadiusY="4"/>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Grid>
+              <TextBlock Classes="meta" HorizontalAlignment="Center" Text="{Binding PageLabel}"/>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+      </ItemsRepeater>
+    </ScrollViewer>
+    </Grid>
+  </DockPanel>
+</UserControl>

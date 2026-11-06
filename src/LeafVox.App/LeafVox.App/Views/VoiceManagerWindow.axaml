@@ -1,0 +1,68 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:LeafVox.App.ViewModels"
+        x:Class="LeafVox.App.Views.VoiceManagerWindow"
+        x:DataType="vm:VoiceManagerViewModel"
+        Title="Free voices"
+        Width="640" Height="560"
+        Background="#17181C"
+        WindowStartupLocation="CenterOwner">
+
+  <Window.Styles>
+    <Style Selector="TextBlock.meta">
+      <Setter Property="Foreground" Value="#9AA1B0"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#1D1F25"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="12"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+    <Style Selector="Button.install">
+      <Setter Property="Background" Value="#2F6FE0"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="14,7"/>
+    </Style>
+  </Window.Styles>
+
+  <DockPanel Margin="14">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+      <TextBlock Text="{Binding Status}" Classes="meta" TextWrapping="Wrap" VerticalAlignment="Center"/>
+      <Button Grid.Column="1" Classes="install" Content="Re-scan" Command="{Binding RefreshCommand}"/>
+    </Grid>
+
+    <ScrollViewer>
+      <ItemsControl ItemsSource="{Binding Voices}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:VoiceItemVm">
+            <Border Classes="card">
+              <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                <StackPanel Spacing="2">
+                  <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" Foreground="#E6E8EF"/>
+                  <TextBlock Classes="meta">
+                    <Run Text="{Binding Language}"/><Run Text=" · "/><Run Text="{Binding TierLabel}"/><Run Text=" · "/><Run Text="{Binding SizeLabel}"/><Run Text=" · "/><Run Text="{Binding LicenseLabel}"/>
+                  </TextBlock>
+                  <TextBlock Classes="meta" Text="{Binding StateLabel}"/>
+                </StackPanel>
+                <ProgressBar Grid.Row="1" Value="{Binding Progress}" Maximum="100"
+                             IsVisible="{Binding Busy}" Height="4"/>
+                <StackPanel Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Center">
+                  <Button Classes="install" Content="Download"
+                          Command="{Binding InstallCommand}"
+                          IsVisible="{Binding !IsInstalled}"/>
+                  <StackPanel IsVisible="{Binding IsInstalled}" Spacing="4">
+                    <TextBlock Text="✓ ready" Foreground="#7BD389" FontWeight="SemiBold"/>
+                    <Button Classes="install" Content="Use this" Command="{Binding UseCommand}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</Window>
