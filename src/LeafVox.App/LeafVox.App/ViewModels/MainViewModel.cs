@@ -20,6 +20,7 @@ public sealed partial class MainViewModel : ViewModelBase
     private readonly HashSet<int> _renderPending = new();
     private readonly Queue<int> _renderedOrder = new();
     private DispatcherTimer? _sleepTimer;
+    private readonly DispatcherTimer? _statusCooldown;
     private string? _currentPath;
     private int _saveCounter;
     private PageRenderer? _pages;
@@ -28,6 +29,7 @@ public sealed partial class MainViewModel : ViewModelBase
     private PageVm? _highlightedPage;
     private int _shownPage;
     private int _openEpoch;
+    private bool _scrubbing;
 
     public const int RenderDpi = 150;
     /// <summary>Device pixels per PDF point at <see cref="RenderDpi"/>.</summary>
@@ -63,11 +65,10 @@ public sealed partial class MainViewModel : ViewModelBase
     private double _speed;
 
     [ObservableProperty]
-    private string _playGlyph = "▶";
-
-    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PositionLabel))]
     [NotifyPropertyChangedFor(nameof(Recents))]
+    [NotifyPropertyChangedFor(nameof(HasDocument))]
+    [NotifyPropertyChangedFor(nameof(ScrubMax))]
     [NotifyCanExecuteChangedFor(nameof(ReadFromSelectedCommand))]
     [NotifyCanExecuteChangedFor(nameof(ReadThisLineCommand))]
     private int _totalSentences;
@@ -76,10 +77,19 @@ public sealed partial class MainViewModel : ViewModelBase
     private bool _isBusy;
 
     [ObservableProperty]
+    private bool _isPlaying;
+
+    [ObservableProperty]
+    private bool _statusHot;
+
+    [ObservableProperty]
+    private int _scrub;
+
+    [ObservableProperty]
     private string _voiceLabel = "voice: —";
 
     [ObservableProperty]
-    private string _sleepLabel = "🌙";
+    private string _sleepLabel = "Sleep";
 
     [ObservableProperty]
     private bool _usePageView = true;
@@ -97,20 +107,37 @@ public sealed partial class MainViewModel : ViewModelBase
         _pipeline.SentenceFinished += (_, _) => Dispatcher.UIThread.Post(RefreshTransport);
         _pipeline.Finished += (_, _) => Dispatcher.UIThread.Post(() =>
         {
-            PlayGlyph = "▶";
+            IsPlaying = false;
             Status = "Finished reading.";
             SavePositionNow();
         });
         _pipeline.Failed += (_, ex) => Dispatcher.UIThread.Post(() =>
         {
-            PlayGlyph = "▶";
+            IsPlaying = false;
             Status = "Playback error: " + ex.Message;
         });
+
+        // Boarding-pass discipline (donated by the gate-board challenger): a status
+        // change flashes the accent and holds briefly before settling back to quiet.
+        _statusCooldown = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+        _statusCooldown.Tick += (_, _) =>
+        {
+            _statusCooldown!.Stop();
+            StatusHot = false;
+        };
     }
 
     public IReadOnlyList<LibraryEntry> Recents => _library.Entries;
 
-    public string ViewLabel => UsePageView ? "📃 Flow" : "📄 Page";
+    /// <summary>True once a document (or page set) is open — drives the empty state.</summary>
+    public bool HasDocument => TotalSentences > 0;
+
+    /// <summary>Whole-book scrubber upper bound.</summary>
+    public int ScrubMax => Math.Max(TotalSentences - 1, 0);
+
+    public string SpeedLabel => $"{Speed:0.##}×";
+
+    public string ViewLabel => UsePageView ? "Flow" : "Page";
 
     public bool HasScannedPages => _scannedPages.Length > 0;
 
@@ -196,6 +223,46 @@ public sealed partial class MainViewModel : ViewModelBase
 
     partial void OnCurrentIndexChanged(int value) => OnPropertyChanged(nameof(PositionLabel));
 
+    // Boarding-pass discipline: every status change flashes the accent and holds it
+    // ~4 s (the _statusCooldown tick settles it back to quiet chalk).
+    partial void OnStatusChanged(string value)
+    {
+        StatusHot = true;
+        _statusCooldown?.Stop();
+        _statusCooldown?.Start();
+    }
+
+    /// <summary>Whole-book scrubber: jump to a sentence. Audible seek while playing/paused; position-only when stopped (no voice needed for a silent jump).</summary>
+    [RelayCommand]
+    private void Seek(int? index)
+    {
+        if (index is not int target || TotalSentences == 0) return;
+        target = Math.Clamp(target, 0, TotalSentences - 1);
+        if (_pipeline.State == SpeechState.Stopped)
+        {
+            _pipeline.PositionOnly(target);
+            SetCurrent(target);
+            ScrollToSentence?.Invoke(target);
+            if (UsePageView) RefreshPageHighlight(target, forceScroll: true);
+        }
+        else
+        {
+            _pipeline.Seek(target);
+        }
+        RefreshTransport();
+        SavePositionNow();
+    }
+
+    /// <summary>Scrubber thumb grabbed: freeze live position sync until it releases.</summary>
+    public void BeginScrub() => _scrubbing = true;
+
+    /// <summary>Scrubber thumb released: commit the dragged position.</summary>
+    public void EndScrub()
+    {
+        _scrubbing = false;
+        if (TotalSentences > 0) Seek(Scrub);
+    }
+
     /// <summary>Opens from the recents menu.</summary>
     [RelayCommand]
     public async Task OpenRecentAsync(LibraryEntry? entry)
@@ -271,7 +338,7 @@ public sealed partial class MainViewModel : ViewModelBase
             var sb = $"{TotalSentences} sentences";
             if (resume > 0) sb += $" · resumed at sentence {resume + 1}";
             if (notes > 0) sb += $" · {notes} scanned page(s) without text";
-            Status = sb + ". Press ▶ to listen.";
+            Status = sb + ". Press play to listen.";
             OnPropertyChanged(nameof(Recents));
         }
         catch (LeafVoxException ex)
@@ -352,7 +419,7 @@ public sealed partial class MainViewModel : ViewModelBase
         {
             _sleepTimer.Stop();
             _sleepTimer = null;
-            SleepLabel = "🌙";
+            SleepLabel = "Sleep";
             Status = "Sleep timer off.";
             return;
         }
@@ -362,18 +429,19 @@ public sealed partial class MainViewModel : ViewModelBase
         {
             _sleepTimer?.Stop();
             _sleepTimer = null;
-            SleepLabel = "🌙";
+            SleepLabel = "Sleep";
             Stop();
             Status = "Sleep timer: stopped playback. Good night.";
         };
         _sleepTimer.Start();
-        SleepLabel = $"🌙 {minutes}m";
+        SleepLabel = $"Sleep {minutes}m";
         Status = $"Will stop in {minutes} minutes.";
     }
 
     private void RefreshTransport()
     {
-        PlayGlyph = _pipeline.State == SpeechState.Playing ? "⏸" : "▶";
+        var playing = _pipeline.State == SpeechState.Playing;
+        IsPlaying = playing;
         ReadFromSelectedCommand.NotifyCanExecuteChanged();
         ReadThisLineCommand.NotifyCanExecuteChanged();
     }
@@ -382,6 +450,7 @@ public sealed partial class MainViewModel : ViewModelBase
     {
         if (CurrentIndex >= 0 && CurrentIndex < Sentences.Count) Sentences[CurrentIndex].IsCurrent = false;
         CurrentIndex = index;
+        if (!_scrubbing) Scrub = Math.Clamp(index, 0, ScrubMax);
         if (index >= 0 && index < Sentences.Count)
         {
             Sentences[index].IsCurrent = true;

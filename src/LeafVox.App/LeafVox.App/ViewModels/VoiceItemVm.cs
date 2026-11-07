@@ -54,7 +54,7 @@ public sealed partial class VoiceItemVm : ObservableObject
             var progress = new Progress<double>(p => Dispatcher.UIThread.Post(() => Progress = p * 100));
             var dir = await downloader.DownloadAsync(Info, progress);
             Voice = new InstalledVoice(Info, InstallState.Installed, dir, null);
-            StateLabel = "installed ✓";
+            StateLabel = "installed";
             statusCallback?.Invoke($"Installed {Info.DisplayName}.");
         }
         catch (Exception ex)
@@ -74,7 +74,7 @@ public sealed partial class VoiceItemVm : ObservableObject
         Voice = fresh;
         StateLabel = fresh.State switch
         {
-            InstallState.Installed => "installed ✓",
+            InstallState.Installed => "installed",
             InstallState.Partial => "partial download — install again",
             _ => "not installed",
         };

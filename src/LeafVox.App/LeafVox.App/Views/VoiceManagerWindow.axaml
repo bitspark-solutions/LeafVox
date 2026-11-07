@@ -5,58 +5,57 @@
         x:DataType="vm:VoiceManagerViewModel"
         Title="Free voices"
         Width="640" Height="560"
-        Background="#17181C"
+        Background="{DynamicResource Brush.Abyss}"
+        RequestedThemeVariant="Dark"
         WindowStartupLocation="CenterOwner">
 
-  <Window.Styles>
-    <Style Selector="TextBlock.meta">
-      <Setter Property="Foreground" Value="#9AA1B0"/>
-      <Setter Property="FontSize" Value="12"/>
-    </Style>
-    <Style Selector="Border.card">
-      <Setter Property="Background" Value="#1D1F25"/>
-      <Setter Property="CornerRadius" Value="8"/>
-      <Setter Property="Padding" Value="12"/>
-      <Setter Property="Margin" Value="0,0,0,8"/>
-    </Style>
-    <Style Selector="Button.install">
-      <Setter Property="Background" Value="#2F6FE0"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="CornerRadius" Value="6"/>
-      <Setter Property="Padding" Value="14,7"/>
-    </Style>
-  </Window.Styles>
-
-  <DockPanel Margin="14">
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
-      <TextBlock Text="{Binding Status}" Classes="meta" TextWrapping="Wrap" VerticalAlignment="Center"/>
-      <Button Grid.Column="1" Classes="install" Content="Re-scan" Command="{Binding RefreshCommand}"/>
+  <DockPanel Margin="16,14">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+      <StackPanel VerticalAlignment="Center" Spacing="2">
+        <TextBlock Text="Voices" Classes="deckTitle" FontSize="15"/>
+        <TextBlock Text="{Binding Status}" Classes="micro" TextWrapping="Wrap"
+                   IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+      </StackPanel>
+      <Button Grid.Column="1" Classes="chip" Content="Re-scan" VerticalAlignment="Center"
+              Command="{Binding RefreshCommand}"/>
     </Grid>
 
     <ScrollViewer>
       <ItemsControl ItemsSource="{Binding Voices}">
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="vm:VoiceItemVm">
-            <Border Classes="card">
+            <!-- Catalog row: hairline-banded, warm only through the installed state -->
+            <Border Padding="2,12" BorderBrush="{DynamicResource Brush.Hairline}"
+                    BorderThickness="0,0,0,1">
               <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
-                <StackPanel Spacing="2">
-                  <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" Foreground="#E6E8EF"/>
-                  <TextBlock Classes="meta">
-                    <Run Text="{Binding Language}"/><Run Text=" · "/><Run Text="{Binding TierLabel}"/><Run Text=" · "/><Run Text="{Binding SizeLabel}"/><Run Text=" · "/><Run Text="{Binding LicenseLabel}"/>
+                <StackPanel Grid.RowSpan="3" Spacing="3" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Brush.Chalk}"/>
+                  <TextBlock Classes="micro">
+                    <Run Text="{Binding Language}"/><Run Text="  ·  "/><Run Text="{Binding TierLabel}"/><Run Text="  ·  "/><Run Text="{Binding SizeLabel}"/><Run Text="  ·  "/><Run Text="{Binding LicenseLabel}"/>
                   </TextBlock>
-                  <TextBlock Classes="meta" Text="{Binding StateLabel}"/>
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Classes="micro" Text="{Binding StateLabel}"
+                               IsVisible="{Binding !IsInstalled}"
+                               Foreground="{DynamicResource Brush.Chalk.Faint}"/>
+                    <Border IsVisible="{Binding IsInstalled}"
+                            Background="{DynamicResource Brush.Accent.Ghost}"
+                            CornerRadius="3" Padding="6,2">
+                      <TextBlock Text="installed" FontSize="11" FontWeight="Medium"
+                                 Foreground="{DynamicResource Brush.Ready}"/>
+                    </Border>
+                  </StackPanel>
+                  <ProgressBar Grid.Row="2" Value="{Binding Progress}" Maximum="100"
+                               IsVisible="{Binding Busy}" Height="3" MinWidth="160"
+                               HorizontalAlignment="Left" Margin="0,4,0,0"/>
                 </StackPanel>
-                <ProgressBar Grid.Row="1" Value="{Binding Progress}" Maximum="100"
-                             IsVisible="{Binding Busy}" Height="4"/>
-                <StackPanel Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Center">
-                  <Button Classes="install" Content="Download"
+                <StackPanel Grid.Column="1" Grid.RowSpan="3" VerticalAlignment="Center" Spacing="6">
+                  <Button Classes="chip" Content="Download" Padding="14,5"
                           Command="{Binding InstallCommand}"
                           IsVisible="{Binding !IsInstalled}"/>
-                  <StackPanel IsVisible="{Binding IsInstalled}" Spacing="4">
-                    <TextBlock Text="✓ ready" Foreground="#7BD389" FontWeight="SemiBold"/>
-                    <Button Classes="install" Content="Use this" Command="{Binding UseCommand}"/>
-                  </StackPanel>
+                  <Button Classes="chip" Content="Use this" Padding="14,5"
+                          Command="{Binding UseCommand}"
+                          IsVisible="{Binding IsInstalled}"/>
                 </StackPanel>
               </Grid>
             </Border>

@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -13,6 +14,17 @@ public partial class MainView : UserControl
     {
         InitializeComponent();
         DataContextChanged += (_, _) => Hook();
+        AttachedToVisualTree += (_, _) => AttachScrub();
+    }
+
+    /// <summary>Scrubber thumb drags freeze live highlight sync until release (VM keeps the timestamp).</summary>
+    private void AttachScrub()
+    {
+        if (Scrubber is not { } scrubber) return;
+        scrubber.AddHandler(Thumb.DragStartedEvent, (object? s, VectorEventArgs e) => Vm?.BeginScrub(),
+            RoutingStrategies.Bubble);
+        scrubber.AddHandler(Thumb.DragCompletedEvent, (object? s, VectorEventArgs e) => Vm?.EndScrub(),
+            RoutingStrategies.Bubble);
     }
 
     private MainViewModel? Vm => DataContext as MainViewModel;
@@ -87,7 +99,7 @@ public partial class MainView : UserControl
             flyout.Items.Add(item);
         }
         if (flyout.Items.Count == 0)
-            flyout.Items.Add(new MenuItem { Header = "(no bookmarks — press ★)", IsEnabled = false });
+            flyout.Items.Add(new MenuItem { Header = "(no bookmarks yet — use the star button)", IsEnabled = false });
     }
 
     protected override void OnKeyDown(KeyEventArgs e)

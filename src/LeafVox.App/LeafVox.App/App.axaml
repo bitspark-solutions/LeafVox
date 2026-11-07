@@ -2,14 +2,181 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:LeafVox.App"
              x:Class="LeafVox.App.App"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
 
+    <!-- Observatory Night tokens: navy-abyss surfaces, chalk text, one night-vision
+         amber-red accent reserved for the spoken line, playback and primary action. -->
+    <Application.Resources>
+        <SolidColorBrush x:Key="Brush.Abyss">#0A0D16</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Panel">#10151F</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Elevated">#161C29</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Hairline">#16FFFFFF</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Stroke">#2AFFFFFF</SolidColorBrush>
+
+        <SolidColorBrush x:Key="Brush.Chalk">#E9EDF5</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Chalk.Secondary">#98A3B8</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Chalk.Faint">#7C87A3</SolidColorBrush>
+
+        <SolidColorBrush x:Key="Brush.Accent">#FF7A50</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Accent.Deep">#E4573C</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Accent.Hover">#FF9C78</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Accent.Dim">#B23E28</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Accent.Wash">#26FF7A50</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Accent.Ghost">#0DFF7A50</SolidColorBrush>
+
+        <SolidColorBrush x:Key="Brush.Ready">#7BD389</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Close.Hover">#E81123</SolidColorBrush>
+        <SolidColorBrush x:Key="Brush.Paper">#F2EDE0</SolidColorBrush>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
+
+        <!-- Micro-label type: chart-coordinate voice -->
+        <Style Selector="TextBlock.micro">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk.Secondary}"/>
+        </Style>
+        <Style Selector="TextBlock.folio">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk.Faint}"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+        <Style Selector="TextBlock.deckTitle">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk}"/>
+        </Style>
+        <Style Selector="TextBlock.statusHot">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+
+        <!-- Deck button: quiet word, hairline frame, drawn on hover -->
+        <Style Selector="Button.deck">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk.Secondary}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.deck /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.deck:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent.Ghost}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.deck:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent.Wash}"/>
+        </Style>
+
+        <!-- Room button (primary/Open): the one accent left in the deck.
+             Warm ink on amber, not white — small text needs 4.5:1 and white
+             touches ~3.7:1 on the deep accent. Ink keeps every state legible. -->
+        <Style Selector="Button.room">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent.Deep}"/>
+            <Setter Property="Foreground" Value="#241109"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.room /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.room:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+        </Style>
+        <Style Selector="Button.room:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent.Hover}"/>
+        </Style>
+
+        <!-- Outline chip: secondary capability actions -->
+        <Style Selector="Button.chip">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Stroke}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk.Secondary}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.chip /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent.Dim}"/>
+        </Style>
+
+        <!-- Transport button: drawn icon on transparent, hover wash -->
+        <Style Selector="Button.transport">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.transport /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.transport:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent.Ghost}"/>
+        </Style>
+        <Style Selector="Button.play /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent.Deep}"/>
+        </Style>
+        <Style Selector="Button.play:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+        </Style>
+
+        <!-- Window chrome buttons -->
+        <Style Selector="Button.winbtn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk.Secondary}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.winbtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Hairline}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Chalk}"/>
+        </Style>
+        <Style Selector="Button.winbtn.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Close.Hover}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- Slider: navy rail, amber visible thumb -->
+
+        <!-- Lists / menus -->
+        <Style Selector="ListBox.flat ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="ListBox.flat ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ListBox.flat ListBoxItem:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
     </Application.Styles>
 </Application>

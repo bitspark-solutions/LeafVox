@@ -4,9 +4,52 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="using:LeafVox.App.Views"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1180" d:DesignHeight="760"
         x:Class="LeafVox.App.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="LeafVox.App">
-        <views:MainView />
+        Title="LeafVox"
+        Background="{DynamicResource Brush.Abyss}"
+        WindowDecorations="BorderOnly"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="0"
+        MinWidth="940" MinHeight="620" Width="1180" Height="760">
+
+  <Grid RowDefinitions="Auto,*">
+    <!-- Custom title rail: drag zone, drawn wordmark, drawn window controls -->
+    <Grid x:Name="TitleRail" Grid.Column="0" Height="42" Background="{DynamicResource Brush.Abyss}">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center" Margin="14,0,0,0">
+          <Path Data="M9,1.2 C13,2.8 14.4,6.8 12.8,10.6 C9.2,12.6 5,11 3.2,7.4 C4.6,3.6 6.2,2 9,1.2 Z M12.6,11.2 L14.6,13.4"
+                Stroke="{DynamicResource Brush.Accent}" StrokeThickness="1.4" StrokeLineCap="Round"/>
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="LeafVox" FontSize="13" FontWeight="SemiBold"
+                       Foreground="{DynamicResource Brush.Chalk}"/>
+            <TextBlock Text="listening reader" FontSize="11"
+                       Foreground="{DynamicResource Brush.Chalk.Faint}"/>
+          </StackPanel>
+        </StackPanel>
+
+        <Grid Grid.Column="1" x:Name="DragZone" Background="Transparent"
+              PointerPressed="OnTitlePointerPressed" DoubleTapped="OnTitleDoubleTapped"/>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal">
+          <Button Classes="winbtn" Click="OnMinimize" ToolTip.Tip="Minimize">
+            <Path Data="M5.5,8.5 H14.5" Stroke="{Binding $parent[Button].Foreground}"
+                  StrokeThickness="1.2" StrokeLineCap="Round"/>
+          </Button>
+          <Button Classes="winbtn" x:Name="MaxGlyphButton" Click="OnToggleMaximize" ToolTip.Tip="Maximize">
+            <Path Data="M5.5,5.5 H14.5 V12.5 H5.5 Z" Stroke="{Binding $parent[Button].Foreground}"
+                  StrokeThickness="1.2" Fill="Transparent"/>
+          </Button>
+          <Button Classes="winbtn close" Click="OnClose" ToolTip.Tip="Close">
+            <Path Data="M5.8,5.4 L14.2,11.6 M14.2,5.4 L5.8,11.6" Stroke="{Binding $parent[Button].Foreground}"
+                  StrokeThickness="1.2" StrokeLineCap="Round"/>
+          </Button>
+        </StackPanel>
+      </Grid>
+      <Border Height="1" VerticalAlignment="Bottom" Background="{DynamicResource Brush.Hairline}"/>
+    </Grid>
+
+    <views:MainView Grid.Row="1"/>
+  </Grid>
 </Window>
